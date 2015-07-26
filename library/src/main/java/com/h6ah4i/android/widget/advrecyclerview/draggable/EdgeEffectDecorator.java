@@ -23,8 +23,8 @@ import android.support.v7.widget.RecyclerView;
 
 public class EdgeEffectDecorator extends RecyclerView.ItemDecoration {
     private RecyclerView mRecyclerView;
-    private EdgeEffectCompat mTopGlow;
-    private EdgeEffectCompat mBottomGlow;
+    private EdgeEffectCompat mLeftGlow;
+    private EdgeEffectCompat mRightGlow;
     private boolean mStarted;
 
     public EdgeEffectDecorator(RecyclerView recyclerView) {
@@ -35,17 +35,17 @@ public class EdgeEffectDecorator extends RecyclerView.ItemDecoration {
     public void onDrawOver(Canvas c, RecyclerView parent, RecyclerView.State state) {
         boolean needsInvalidate = false;
 
-        if (mTopGlow != null && !mTopGlow.isFinished()) {
+        if (mLeftGlow != null && !mLeftGlow.isFinished()) {
             final int restore = c.save();
             if (getClipToPadding(parent)) {
                 c.translate(parent.getPaddingLeft(), parent.getPaddingTop());
             }
             //noinspection ConstantConditions
-            needsInvalidate |= mTopGlow.draw(c);
+            needsInvalidate |= mLeftGlow.draw(c);
             c.restoreToCount(restore);
         }
 
-        if (mBottomGlow != null && !mBottomGlow.isFinished()) {
+        if (mRightGlow != null && !mRightGlow.isFinished()) {
             final int restore = c.save();
             c.rotate(180);
             if (getClipToPadding(parent)) {
@@ -53,7 +53,7 @@ public class EdgeEffectDecorator extends RecyclerView.ItemDecoration {
             } else {
                 c.translate(-parent.getWidth(), -parent.getHeight());
             }
-            needsInvalidate |= mBottomGlow.draw(c);
+            needsInvalidate |= mRightGlow.draw(c);
             c.restoreToCount(restore);
         }
 
@@ -79,18 +79,18 @@ public class EdgeEffectDecorator extends RecyclerView.ItemDecoration {
         mStarted = false;
     }
 
-    public void pullTopGlow(float deltaDistance) {
-        ensureTopGlow(mRecyclerView);
+    public void pullLeftGlow(float deltaDistance) {
+        ensureLeftGlow(mRecyclerView);
 
-        if (mTopGlow.onPull(deltaDistance, 0.5f)) {
+        if (mLeftGlow.onPull(deltaDistance, 0.5f)) {
             ViewCompat.postInvalidateOnAnimation(mRecyclerView);
         }
     }
 
-    public void pullBottom(float deltaDistance) {
-        ensureBottomGlow(mRecyclerView);
+    public void pullRight(float deltaDistance) {
+        ensureRightGlow(mRecyclerView);
 
-        if (mBottomGlow.onPull(deltaDistance, 0.5f)) {
+        if (mRightGlow.onPull(deltaDistance, 0.5f)) {
             ViewCompat.postInvalidateOnAnimation(mRecyclerView);
         }
     }
@@ -98,13 +98,13 @@ public class EdgeEffectDecorator extends RecyclerView.ItemDecoration {
     public void releaseBothGlows() {
         boolean needsInvalidate = false;
 
-        if (mTopGlow != null) {
+        if (mLeftGlow != null) {
             //noinspection ConstantConditions
-            needsInvalidate |= mTopGlow.onRelease();
+            needsInvalidate |= mLeftGlow.onRelease();
         }
 
-        if (mBottomGlow != null) {
-            needsInvalidate |= mBottomGlow.onRelease();
+        if (mRightGlow != null) {
+            needsInvalidate |= mRightGlow.onRelease();
         }
 
         if (needsInvalidate) {
@@ -112,22 +112,22 @@ public class EdgeEffectDecorator extends RecyclerView.ItemDecoration {
         }
     }
 
-    private void ensureTopGlow(RecyclerView rv) {
-        if (mTopGlow == null) {
-            mTopGlow = new EdgeEffectCompat(rv.getContext());
+    private void ensureLeftGlow(RecyclerView rv) {
+        if (mLeftGlow == null) {
+            mLeftGlow = new EdgeEffectCompat(rv.getContext());
         }
 
-        updateGlowSize(rv, mTopGlow);
+        updateGlowSize(rv, mLeftGlow);
     }
 
-    private void ensureBottomGlow(RecyclerView rv) {
-        if (mBottomGlow == null) {
-            mBottomGlow = new EdgeEffectCompat(rv.getContext());
+    private void ensureRightGlow(RecyclerView rv) {
+        if (mRightGlow == null) {
+            mRightGlow = new EdgeEffectCompat(rv.getContext());
         }
-        updateGlowSize(rv, mBottomGlow);
+        updateGlowSize(rv, mRightGlow);
     }
 
-    private static void updateGlowSize(RecyclerView rv, EdgeEffectCompat topGlow) {
+    private static void updateGlowSize(RecyclerView rv, EdgeEffectCompat leftGlow) {
         int width = rv.getMeasuredWidth();
         int height = rv.getMeasuredHeight();
 
@@ -139,14 +139,14 @@ public class EdgeEffectDecorator extends RecyclerView.ItemDecoration {
         width = Math.max(0, width);
         height = Math.max(0, height);
 
-        topGlow.setSize(width, height);
+        leftGlow.setSize(width, height);
     }
 
     private static boolean getClipToPadding(RecyclerView rv) {
         return rv.getLayoutManager().getClipToPadding();
     }
 
-    public void reorderToTop() {
+    public void reorderToLeft() {
         if (mStarted) {
             mRecyclerView.removeItemDecoration(this);
             mRecyclerView.addItemDecoration(this);

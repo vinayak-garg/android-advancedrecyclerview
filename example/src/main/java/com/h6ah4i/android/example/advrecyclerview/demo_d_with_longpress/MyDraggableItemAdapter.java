@@ -49,7 +49,7 @@ public class MyDraggableItemAdapter
         public MyViewHolder(View v) {
             super(v);
             mContainer = (FrameLayout) v.findViewById(R.id.container);
-            mDragHandle = v.findViewById(R.id.drag_handle);
+            mDragHandle = v.findViewById(R.id.container);
             mTextView = (TextView) v.findViewById(android.R.id.text1);
         }
     }

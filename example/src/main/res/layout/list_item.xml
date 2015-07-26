@@ -19,30 +19,28 @@
     style="@style/commonListItemStyle"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="64dp"
+    android:layout_width="80dp"
+    android:layout_height="80dp"
+    android:layout_marginRight="5dp"
     android:background="@drawable/bg_swipe_item_neutral">
 
     <FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true"
-        android:foreground="?attr/selectableItemBackground">
+        android:clickable="true">
 
         <View
             android:id="@+id/drag_handle"
             android:layout_width="32dp"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
+            android:visibility="gone"
             android:background="#20000000"/>
 
         <TextView
             android:id="@android:id/text1"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="32dp"
             android:gravity="center"
             tools:ignore="RtlHardcoded"/>
 

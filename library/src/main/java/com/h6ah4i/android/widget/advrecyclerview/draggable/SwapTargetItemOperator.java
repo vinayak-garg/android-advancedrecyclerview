@@ -31,8 +31,8 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
     private RecyclerView.ViewHolder mSwapTargetItem;
     private Interpolator mSwapTargetTranslationInterpolator;
-    private int mTranslationY;
-    private int mDraggingItemHeight;
+    private int mTranslationX;
+    private int mDraggingItemWidth;
     private Rect mSwapTargetDecorationOffsets = new Rect();
     private Rect mSwapTargetItemMargins = new Rect();
     private Rect mDraggingItemMargins = new Rect();
@@ -68,11 +68,11 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         final RecyclerView.ViewHolder swapTargetItem =
                 RecyclerViewDragDropManager.findSwapTargetItem(
-                        mRecyclerView, draggingItem, mDraggingItemId, mTranslationY, mRange);
+                        mRecyclerView, draggingItem, mDraggingItemId, mTranslationX, mRange);
 
-        // reset Y-translation if the swap target has changed
+        // reset X-translation if the swap target has changed
         if ((mSwapTargetItem != swapTargetItem) && (mSwapTargetItem != null)) {
-            setItemTranslationY(mRecyclerView, mSwapTargetItem, 0.0f);
+            setItemTranslationX(mRecyclerView, mSwapTargetItem, 0.0f);
         }
 
         if (swapTargetItem != null) {
@@ -103,9 +103,9 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         final Rect m2 = mSwapTargetItemMargins;
         final Rect d2 = mSwapTargetDecorationOffsets;
-        final int h2 = swapItemView.getHeight() + m2.top + m2.bottom + d2.top + d2.bottom;
+        final int h2 = swapItemView.getWidth() + m2.left + m2.right + d2.left + d2.right;
 
-        final float offsetPx = draggingItem.itemView.getTop() - mTranslationY; // == -(ViewCompat.getTranslationY(draggingItem.itemView)
+        final float offsetPx = draggingItem.itemView.getLeft() - mTranslationX; // == -(ViewCompat.getTranslationY(draggingItem.itemView)
         final float phase = (h2 != 0) ? (offsetPx / h2) : 0.0f;
 
         float translationPhase;
@@ -137,7 +137,7 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         final Rect m1 = mDraggingItemMargins;
         final Rect d1 = mDraggingItemDecorationOffsets;
-        final int h1 = mDraggingItemHeight + m1.top + m1.bottom + d1.top + d1.bottom;
+        final int h1 = mDraggingItemWidth + m1.left + m1.right + d1.left + d1.right;
 
         if (mSwapTargetTranslationInterpolator != null) {
             translationPhase = mSwapTargetTranslationInterpolator.getInterpolation(translationPhase);
@@ -145,10 +145,10 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         if (pos1 > pos2) {
             // dragging item moving to upward
-            ViewCompat.setTranslationY(swapItemView, translationPhase * h1);
+            ViewCompat.setTranslationX(swapItemView, translationPhase * h1);
         } else {
             // dragging item moving to downward
-            ViewCompat.setTranslationY(swapItemView, (translationPhase - 1.0f) * h1);
+            ViewCompat.setTranslationX(swapItemView, (translationPhase - 1.0f) * h1);
         }
     }
 
@@ -157,7 +157,7 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
             return;
         }
 
-        mDraggingItemHeight = mDraggingItem.itemView.getHeight();
+        mDraggingItemWidth = mDraggingItem.itemView.getWidth();
 
         mRecyclerView.addItemDecoration(this, 0);
 
@@ -184,14 +184,14 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         mRange = null;
         mDraggingItem = null;
-        mTranslationY = 0;
-        mDraggingItemHeight = 0;
+        mTranslationX = 0;
+        mDraggingItemWidth = 0;
         mCurTranslationPhase = 0.0f;
         mReqTranslationPhase = 0.0f;
         mStarted = false;
     }
 
-    public void update(int translationY) {
-        mTranslationY = translationY;
+    public void update(int translationX) {
+        mTranslationX = translationX;
     }
 }
