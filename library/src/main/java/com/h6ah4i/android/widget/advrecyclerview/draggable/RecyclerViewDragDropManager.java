@@ -125,7 +125,7 @@ public class RecyclerViewDragDropManager {
     private RecyclerView.OnItemTouchListener mInternalUseOnItemTouchListener;
     private RecyclerView.OnScrollListener mInternalUseOnScrollListener;
 
-    private EdgeEffectDecorator mEdgeEffectDecorator;
+    //private EdgeEffectDecorator mEdgeEffectDecorator;
     private NinePatchDrawable mShadowDrawable;
 
     private float mDisplayDensity;
@@ -293,11 +293,11 @@ public class RecyclerViewDragDropManager {
         mScrollTouchSlop = (int) (mTouchSlop * SCROLL_TOUCH_SLOP_MULTIPLY + 0.5f);
         mHandler = new InternalHandler(this);
 
-        if (supportsEdgeEffect()) {
+        /*if (supportsEdgeEffect()) {
             // edge effect is available on ICS or later
             mEdgeEffectDecorator = new EdgeEffectDecorator(mRecyclerView);
             mEdgeEffectDecorator.start();
-        }
+        }*/
     }
 
     /**
@@ -313,10 +313,10 @@ public class RecyclerViewDragDropManager {
             mHandler = null;
         }
 
-        if (mEdgeEffectDecorator != null) {
+        /*if (mEdgeEffectDecorator != null) {
             mEdgeEffectDecorator.finish();
             mEdgeEffectDecorator = null;
-        }
+        }*/
 
         if (mRecyclerView != null && mInternalUseOnItemTouchListener != null) {
             mRecyclerView.removeOnItemTouchListener(mInternalUseOnItemTouchListener);
@@ -583,9 +583,9 @@ public class RecyclerViewDragDropManager {
             mSwapTargetItemOperator.update(mDraggingItemDecorator.getDraggingItemTranslationX());
         }
 
-        if (mEdgeEffectDecorator != null) {
+        /*if (mEdgeEffectDecorator != null) {
             mEdgeEffectDecorator.reorderToLeft();
-        }
+        }*/
 
         if (mItemDragEventListener != null) {
             mItemDragEventListener.onDraggingStarted(mAdapter.getDraggingItemInitialPosition());
@@ -650,9 +650,9 @@ public class RecyclerViewDragDropManager {
             mSwapTargetItemOperator.finish(true);
         }
 
-        if (mEdgeEffectDecorator != null) {
+        /*if (mEdgeEffectDecorator != null) {
             mEdgeEffectDecorator.releaseBothGlows();
-        }
+        }*/
 
         stopScrollOnDraggingProcess();
 
@@ -938,7 +938,7 @@ public class RecyclerViewDragDropManager {
             mDraggingItemDecorator.setIsScrolling(false);
         }
 
-        final boolean actualIsScrolling = (actualScrolledAmount != 0);
+        /*final boolean actualIsScrolling = (actualScrolledAmount != 0);
 
 
         if (mEdgeEffectDecorator != null) {
@@ -975,12 +975,12 @@ public class RecyclerViewDragDropManager {
             }
 
             updateEdgeEffect(edgeEffectPullDistance);
-        }
+        }*/
 
         ViewCompat.postOnAnimation(mRecyclerView, mCheckItemSwappingRunnable);
     }
 
-    private void updateEdgeEffect(float distance) {
+    /*private void updateEdgeEffect(float distance) {
         if (distance != 0.0f) {
             if (distance < 0) {
                 // upward
@@ -992,7 +992,7 @@ public class RecyclerViewDragDropManager {
         } else {
             mEdgeEffectDecorator.releaseBothGlows();
         }
-    }
+    }*/
 
     private Runnable mCheckItemSwappingRunnable = new Runnable() {
         @Override
