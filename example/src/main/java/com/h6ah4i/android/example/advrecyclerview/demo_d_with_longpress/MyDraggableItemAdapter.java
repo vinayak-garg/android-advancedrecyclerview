@@ -16,9 +16,10 @@
 
 package com.h6ah4i.android.example.advrecyclerview.demo_d_with_longpress;
 
-import android.support.v4.view.ViewCompat;
+import android.app.Activity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +29,6 @@ import android.widget.TextView;
 import com.h6ah4i.android.example.advrecyclerview.R;
 import com.h6ah4i.android.example.advrecyclerview.common.data.AbstractDataProvider;
 import com.h6ah4i.android.example.advrecyclerview.common.utils.DrawableUtils;
-import com.h6ah4i.android.example.advrecyclerview.common.utils.ViewUtils;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.DraggableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange;
 import com.h6ah4i.android.widget.advrecyclerview.draggable.RecyclerViewDragDropManager;
@@ -38,28 +38,36 @@ public class MyDraggableItemAdapter
         extends RecyclerView.Adapter<MyDraggableItemAdapter.MyViewHolder>
         implements DraggableItemAdapter<MyDraggableItemAdapter.MyViewHolder> {
     private static final String TAG = "MyDraggableItemAdapter";
+    private final static int COLUMN_COUNT = 4;
+    private final int THUMB_SIZE;
 
     private AbstractDataProvider mProvider;
 
     public static class MyViewHolder extends AbstractDraggableItemViewHolder {
         public FrameLayout mContainer;
-        public View mDragHandle;
         public TextView mTextView;
 
-        public MyViewHolder(View v) {
+        public MyViewHolder(View v, int thumbSize) {
             super(v);
             mContainer = (FrameLayout) v.findViewById(R.id.container);
-            mDragHandle = v.findViewById(R.id.container);
             mTextView = (TextView) v.findViewById(android.R.id.text1);
+            mContainer.getLayoutParams().height = thumbSize;
+            mContainer.getLayoutParams().width = thumbSize;
         }
     }
 
-    public MyDraggableItemAdapter(AbstractDataProvider dataProvider) {
+    public MyDraggableItemAdapter(Activity activity, AbstractDataProvider dataProvider) {
         mProvider = dataProvider;
 
         // DraggableItemAdapter requires stable ID, and also
         // have to implement the getItemId() method appropriately.
         setHasStableIds(true);
+
+        Display display = activity.getWindowManager().getDefaultDisplay();
+        android.graphics.Point size = new android.graphics.Point();
+        display.getSize(size);
+        int itemMargin = (int)activity.getResources().getDimension(R.dimen.clip_thumb_margin);
+        THUMB_SIZE = (size.x - (COLUMN_COUNT+1)*itemMargin)/COLUMN_COUNT;
     }
 
     @Override
@@ -76,7 +84,7 @@ public class MyDraggableItemAdapter
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         final View v = inflater.inflate((viewType == 0) ? R.layout.list_item : R.layout.list_item2, parent, false);
-        return new MyViewHolder(v);
+        return new MyViewHolder(v, THUMB_SIZE);
     }
 
     @Override
@@ -128,13 +136,14 @@ public class MyDraggableItemAdapter
     @Override
     public boolean onCheckCanStartDrag(MyViewHolder holder, int position, int x, int y) {
         // x, y --- relative from the itemView's top-left
-        final View containerView = holder.mContainer;
+        /*final View containerView = holder.mContainer;
         final View dragHandleView = holder.mDragHandle;
 
         final int offsetX = containerView.getLeft() + (int) (ViewCompat.getTranslationX(containerView) + 0.5f);
         final int offsetY = containerView.getTop() + (int) (ViewCompat.getTranslationY(containerView) + 0.5f);
 
-        return ViewUtils.hitTest(dragHandleView, x - offsetX, y - offsetY);
+        return ViewUtils.hitTest(dragHandleView, x - offsetX, y - offsetY);*/
+        return true;
     }
 
     @Override

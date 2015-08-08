@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -58,18 +59,18 @@ public class RecyclerListViewFragment extends Fragment {
 
         //noinspection ConstantConditions
         mRecyclerView = (RecyclerView) getView().findViewById(R.id.recycler_view);
-        mLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+        mLayoutManager = new GridLayoutManager(getActivity(), 4);
 
         // drag & drop manager
         mRecyclerViewDragDropManager = new RecyclerViewDragDropManager();
-        mRecyclerViewDragDropManager.setDraggingItemShadowDrawable(
-                (NinePatchDrawable) getResources().getDrawable(R.drawable.material_shadow_z3));
+        //mRecyclerViewDragDropManager.setDraggingItemShadowDrawable(
+          //      (NinePatchDrawable) getResources().getDrawable(R.drawable.material_shadow_z3));
         // Start dragging after long press
         mRecyclerViewDragDropManager.setInitiateOnLongPress(true);
         mRecyclerViewDragDropManager.setInitiateOnMove(false);
 
         //adapter
-        final MyDraggableItemAdapter myItemAdapter = new MyDraggableItemAdapter(getDataProvider());
+        final MyDraggableItemAdapter myItemAdapter = new MyDraggableItemAdapter(getActivity(), getDataProvider());
         mAdapter = myItemAdapter;
 
         mWrappedAdapter = mRecyclerViewDragDropManager.createWrappedAdapter(myItemAdapter);      // wrap for dragging

@@ -16,15 +16,14 @@
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:background="#006600">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
-        android:layout_centerVertical="true"
-        android:scrollbars="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="180dp"
-        android:paddingTop="50dp"
-        android:paddingBottom="50dp"/>
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/clip_thumb_margin"
+        android:layout_marginLeft="@dimen/clip_thumb_margin"/>
 
 </RelativeLayout>

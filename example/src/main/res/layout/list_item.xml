@@ -19,15 +19,16 @@
     style="@style/commonListItemStyle"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="80dp"
-    android:layout_height="80dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:layout_marginRight="5dp"
-    android:background="@drawable/bg_swipe_item_neutral">
+    android:paddingBottom="5dp">
 
     <FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#666666"
         android:clickable="true">
 
         <View
