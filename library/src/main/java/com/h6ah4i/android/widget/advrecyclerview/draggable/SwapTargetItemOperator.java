@@ -17,22 +17,27 @@
 package com.h6ah4i.android.widget.advrecyclerview.draggable;
 
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Interpolator;
 
 import com.h6ah4i.android.widget.advrecyclerview.utils.CustomRecyclerViewUtils;
 
+import java.util.ArrayList;
+
 class SwapTargetItemOperator extends BaseDraggableItemDecorator {
     @SuppressWarnings("unused")
     private static final String TAG = "SwapTargetItemOperator";
 
-    private RecyclerView.ViewHolder mSwapTargetItem;
+    private ArrayList<RecyclerView.ViewHolder> mSwapTargetItems;
     private Interpolator mSwapTargetTranslationInterpolator;
-    private int mTranslationX;
-    private int mDraggingItemWidth;
+    private Point mTranslation;
+    private Point originalPos;
+    private int mDraggingItemSize;
     private Rect mSwapTargetDecorationOffsets = new Rect();
     private Rect mSwapTargetItemMargins = new Rect();
     private Rect mDraggingItemMargins = new Rect();
@@ -66,36 +71,46 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
             return;
         }
 
-        final RecyclerView.ViewHolder swapTargetItem =
-                RecyclerViewDragDropManager.findSwapTargetItem(
-                        mRecyclerView, draggingItem, mDraggingItemId, mTranslationX, mRange);
+        final ArrayList<RecyclerView.ViewHolder> swapTargetItems =
+                RecyclerViewDragDropManager.findSwapTargetItems(
+                        mRecyclerView, draggingItem, mDraggingItemId, mTranslation, mRange);
 
-        // reset X-translation if the swap target has changed
-        if ((mSwapTargetItem != swapTargetItem) && (mSwapTargetItem != null)) {
-            setItemTranslationX(mRecyclerView, mSwapTargetItem, 0.0f);
+        // reset translation if the swap target has changed
+        if ((mSwapTargetItems != null) && (swapTargetItems != null) && (mSwapTargetItems.get(0) != swapTargetItems.get(0))) {
+            Point origin = new Point(0, 0);
+            for (int i = 0; i < mSwapTargetItems.size(); i++) {
+                setItemTranslation(mRecyclerView, mSwapTargetItems.get(i), origin);
+            }
         }
 
-        if (swapTargetItem != null) {
-            mReqTranslationPhase = calculateTranslationPhase(draggingItem, swapTargetItem);
+        if (swapTargetItems != null) {
+            /**
+             * Calculate phases based on only one target
+             * Other target's phase should anyway match each other
+             */
+            mReqTranslationPhase = calculateTranslationPhase(draggingItem, swapTargetItems.get(0));
+            Log.d(TAG, "mReqTranslationPhase = "+mReqTranslationPhase);
 
-            if (mSwapTargetItem != swapTargetItem) {
+            if (mSwapTargetItems != swapTargetItems) {
+                Log.d(TAG, "mSwapTargetItems != swapTargetItems");
                 mCurTranslationPhase = mReqTranslationPhase;
             } else {
                 // interpolate to make it moves smoothly
                 mCurTranslationPhase = calculateCurrentTranslationPhase(mCurTranslationPhase, mReqTranslationPhase);
             }
-
-            updateSwapTargetTranslation(draggingItem, swapTargetItem, mCurTranslationPhase);
+            for (int i = 0; i < swapTargetItems.size(); i++) {
+                updateSwapTargetTranslation(draggingItem, swapTargetItems.get(i), mCurTranslationPhase);
+            }
         }
 
-        mSwapTargetItem = swapTargetItem;
+        mSwapTargetItems = swapTargetItems;
     }
 
     private float calculateTranslationPhase(RecyclerView.ViewHolder draggingItem, RecyclerView.ViewHolder swapTargetItem) {
         final View swapItemView = swapTargetItem.itemView;
 
-        final int pos1 = draggingItem.getLayoutPosition();
-        final int pos2 = swapTargetItem.getLayoutPosition();
+        //final int pos1 = draggingItem.getLayoutPosition();
+        //final int pos2 = swapTargetItem.getLayoutPosition();
 
         CustomRecyclerViewUtils.getDecorationOffsets(
                 mRecyclerView.getLayoutManager(), swapItemView, mSwapTargetDecorationOffsets);
@@ -105,10 +120,11 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
         final Rect d2 = mSwapTargetDecorationOffsets;
         final int h2 = swapItemView.getWidth() + m2.left + m2.right + d2.left + d2.right;
 
-        final float offsetPx = draggingItem.itemView.getLeft() - mTranslationX; // == -(ViewCompat.getTranslationY(draggingItem.itemView)
+        final float offsetPx = Math.max(Math.abs(draggingItem.itemView.getLeft() - mTranslation.x),
+                Math.abs(draggingItem.itemView.getTop() - mTranslation.y));
         final float phase = (h2 != 0) ? (offsetPx / h2) : 0.0f;
 
-        float translationPhase;
+        /*float translationPhase;
 
         if (pos1 > pos2) {
             // dragging item moving to upward
@@ -116,9 +132,9 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
         } else {
             // dragging item moving to downward
             translationPhase = 1.0f + phase;
-        }
+        }*/
 
-        return Math.min(Math.max(translationPhase, 0.0f), 1.0f);
+        return Math.min(Math.max(phase, 0.0f), 1.0f);
     }
 
     private static float calculateCurrentTranslationPhase(float cur, float req) {
@@ -137,7 +153,8 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         final Rect m1 = mDraggingItemMargins;
         final Rect d1 = mDraggingItemDecorationOffsets;
-        final int h1 = mDraggingItemWidth + m1.left + m1.right + d1.left + d1.right;
+        final int h1 = mDraggingItemSize + m1.left + m1.right + d1.left + d1.right;
+        final int h2 = mDraggingItemSize + m1.top + m1.bottom + d1.top + d1.bottom;
 
         if (mSwapTargetTranslationInterpolator != null) {
             translationPhase = mSwapTargetTranslationInterpolator.getInterpolation(translationPhase);
@@ -145,10 +162,23 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         if (pos1 > pos2) {
             // dragging item moving to upward
-            ViewCompat.setTranslationX(swapItemView, translationPhase * h1);
+            if ((pos2+1)%4 != 0) {
+                ViewCompat.setTranslationX(swapItemView, translationPhase * h1); //TODO
+            } else {
+                //edge case
+                ViewCompat.setTranslationX(swapItemView, -translationPhase * h1 * 4);
+                ViewCompat.setTranslationY(swapItemView, translationPhase * h2);
+            }
         } else {
             // dragging item moving to downward
-            ViewCompat.setTranslationX(swapItemView, (translationPhase - 1.0f) * h1);
+            //ViewCompat.setTranslationX(swapItemView, (translationPhase - 1.0f) * h1);
+            if (pos2%4 != 0) {
+                ViewCompat.setTranslationX(swapItemView, -translationPhase * h1);
+            } else {
+                //edge case
+                ViewCompat.setTranslationX(swapItemView, translationPhase * h1 * 4);
+                ViewCompat.setTranslationY(swapItemView, -translationPhase * h2);
+            }
         }
     }
 
@@ -157,7 +187,7 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
             return;
         }
 
-        mDraggingItemWidth = mDraggingItem.itemView.getWidth();
+        mDraggingItemSize = mDraggingItem.itemView.getWidth();
 
         mRecyclerView.addItemDecoration(this, 0);
 
@@ -175,23 +205,25 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
         }
         mRecyclerView.stopScroll();
 
-        if (mSwapTargetItem != null) {
+        if (mSwapTargetItems != null) {
             // return to default position
-            updateSwapTargetTranslation(mDraggingItem, mSwapTargetItem, mCurTranslationPhase);
-            moveToDefaultPosition(mSwapTargetItem.itemView, animate);
-            mSwapTargetItem = null;
+            for (int i = 0; i < mSwapTargetItems.size(); i++) {
+                updateSwapTargetTranslation(mDraggingItem, mSwapTargetItems.get(i), mCurTranslationPhase); // TODO
+                moveToDefaultPosition(mSwapTargetItems.get(i).itemView, animate);
+            }
+            mSwapTargetItems = null;
         }
 
         mRange = null;
         mDraggingItem = null;
-        mTranslationX = 0;
-        mDraggingItemWidth = 0;
+        mTranslation.x = mTranslation.y = 0;
+        mDraggingItemSize = 0;
         mCurTranslationPhase = 0.0f;
         mReqTranslationPhase = 0.0f;
         mStarted = false;
     }
 
-    public void update(int translationX) {
-        mTranslationX = translationX;
+    public void update(Point translation) {
+        mTranslation = translation;
     }
 }

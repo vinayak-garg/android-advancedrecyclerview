@@ -17,6 +17,7 @@
 package com.h6ah4i.android.widget.advrecyclerview.utils;
 
 import android.graphics.Rect;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -82,8 +83,8 @@ public class CustomRecyclerViewUtils {
     public static int findFirstVisibleItemPosition(RecyclerView rv) {
         RecyclerView.LayoutManager layoutManager = rv.getLayoutManager();
 
-        if (layoutManager instanceof LinearLayoutManager) {
-            return (((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition());
+        if (layoutManager instanceof GridLayoutManager) {
+            return (((GridLayoutManager) layoutManager).findFirstVisibleItemPosition());
         } else {
             return RecyclerView.NO_POSITION;
         }
@@ -92,8 +93,8 @@ public class CustomRecyclerViewUtils {
     public static int findLastVisibleItemPosition(RecyclerView rv) {
         RecyclerView.LayoutManager layoutManager = rv.getLayoutManager();
 
-        if (layoutManager instanceof LinearLayoutManager) {
-            return (((LinearLayoutManager) layoutManager).findLastVisibleItemPosition());
+        if (layoutManager instanceof GridLayoutManager) {
+            return (((GridLayoutManager) layoutManager).findLastVisibleItemPosition());
         } else {
             return RecyclerView.NO_POSITION;
         }
@@ -102,8 +103,8 @@ public class CustomRecyclerViewUtils {
     public static int findFirstCompletelyVisibleItemPosition(RecyclerView rv) {
         RecyclerView.LayoutManager layoutManager = rv.getLayoutManager();
 
-        if (layoutManager instanceof LinearLayoutManager) {
-            return (((LinearLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition());
+        if (layoutManager instanceof GridLayoutManager) {
+            return (((GridLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition());
         } else {
             return RecyclerView.NO_POSITION;
         }
@@ -112,8 +113,8 @@ public class CustomRecyclerViewUtils {
     public static int findLastCompletelyVisibleItemPosition(RecyclerView rv) {
         RecyclerView.LayoutManager layoutManager = rv.getLayoutManager();
 
-        if (layoutManager instanceof LinearLayoutManager) {
-            return (((LinearLayoutManager) layoutManager).findLastCompletelyVisibleItemPosition());
+        if (layoutManager instanceof GridLayoutManager) {
+            return (((GridLayoutManager) layoutManager).findLastCompletelyVisibleItemPosition());
         } else {
             return RecyclerView.NO_POSITION;
         }

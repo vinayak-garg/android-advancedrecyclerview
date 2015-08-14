@@ -18,10 +18,13 @@ package com.h6ah4i.android.widget.advrecyclerview.draggable;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Point;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.drawable.NinePatchDrawable;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -31,14 +34,14 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
     @SuppressWarnings("unused")
     private static final String TAG = "DraggingItemDecorator";
 
-    private int mGrabbedPositionX;
-    private int mTranslationX;
-    private int mRecyclerViewPaddingTop;
+    private Point mGrabbedPosition = new Point();
+    private Point mTranslation = new Point();
+    private Point mRecyclerViewPadding = new Point();
     private Bitmap mDraggingItemImage;
-    private int mTranslationLeftLimit;
-    private int mTranslationRightLimit;
-    private int mGrabbedItemWidth;
-    private int mTouchPositionX;
+    private Point mTranslationStartLimit = new Point();
+    private Point mTranslationEndLimit = new Point();
+    private Point mGrabbedItemSize = new Point();
+    private Point mTouchPosition = new Point();
     private NinePatchDrawable mShadowDrawable;
     private Rect mShadowPadding = new Rect();
     private Rect mDraggingItemMargins = new Rect();
@@ -59,27 +62,29 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         // However, if the RecyclerView has any other decorations or RecyclerView is in scrolling state,
         // need to draw it to avoid visual corruptions.
         if (mDraggingItemImage != null) {
-            final float left = mTranslationX + mDraggingItemMargins.left - mShadowPadding.left;
-            final float top = /*mDraggingItemMargins.top +*/ mRecyclerViewPaddingTop - mShadowPadding.top;  ///TODO: Review
+            final float left = mTranslation.x + mDraggingItemMargins.left + mRecyclerViewPadding.x - mShadowPadding.left;
+            final float top = mTranslation.y + mDraggingItemMargins.top + mRecyclerViewPadding.y - mShadowPadding.top;
             c.drawBitmap(mDraggingItemImage, left, top, null);
         }
     }
 
-    public void start(MotionEvent e, float grabbedPositionX) {
+    public void start(MotionEvent e, PointF grabbedPosition) {
         if (mStarted) {
             return;
         }
 
         final View itemView = mDraggingItem.itemView;
 
-        mGrabbedPositionX = (int) (grabbedPositionX + 0.5f);
+        mGrabbedPosition.x = (int) (grabbedPosition.x + 0.5f);
+        mGrabbedPosition.y = (int) (grabbedPosition.y + 0.5f);
 
         // draw the grabbed item on bitmap
         mDraggingItemImage = createDraggingItemImage(itemView);
 
-        mGrabbedItemWidth = itemView.getWidth();
-        mTranslationLeftLimit = mRecyclerView.getPaddingLeft();
-        mRecyclerViewPaddingTop = mRecyclerView.getPaddingTop();
+        mGrabbedItemSize.x = itemView.getWidth();
+        mGrabbedItemSize.y = itemView.getHeight();
+        mTranslationStartLimit.x = mRecyclerViewPadding.x = mRecyclerView.getPaddingLeft();
+        mTranslationStartLimit.y = mRecyclerViewPadding.y = mRecyclerView.getPaddingTop();
 
         // hide
         itemView.setVisibility(View.INVISIBLE);
@@ -103,7 +108,7 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         mRecyclerView.stopScroll();
 
         // return to default position
-        updateDraggingItemPosition(mTranslationX);
+        updateDraggingItemPosition(mTranslation);
         if (mDraggingItem != null) {
             moveToDefaultPosition(mDraggingItem.itemView, animate);
         }
@@ -120,24 +125,25 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         }
 
         mRange = null;
-        mGrabbedPositionX = 0;
-        mTranslationX = 0;
-        mTranslationLeftLimit = 0;
-        mTranslationRightLimit = 0;
-        mRecyclerViewPaddingTop = 0;
-        mGrabbedItemWidth = 0;
-        mTouchPositionX = 0;
+        mGrabbedPosition.x = mGrabbedPosition.y = 0;
+        mTranslation.x = mTranslation.y = 0;
+        mTranslationStartLimit.x = mTranslationStartLimit.y = 0;
+        mTranslationEndLimit.x = mTranslationEndLimit.y = 0;
+        mRecyclerViewPadding.x = mRecyclerViewPadding.y = 0;
+        mGrabbedItemSize.x = mGrabbedItemSize.y = 0;
+        mTouchPosition.x = mTouchPosition.y = 0;
         mStarted = false;
     }
 
     public void update(MotionEvent e) {
-        mTouchPositionX = (int) (e.getX() + 0.5f);
+        mTouchPosition.x = (int) (e.getX() + 0.5f);
+        mTouchPosition.y = (int) (e.getY() + 0.5f);
         refresh();
     }
 
     public void refresh() {
         updateTranslationOffset();
-        updateDraggingItemPosition(mTranslationX);
+        updateDraggingItemPosition(mTranslation);
 
         ViewCompat.postInvalidateOnAnimation(mRecyclerView);
     }
@@ -150,45 +156,52 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         }
     }
 
-    public int getDraggingItemTranslationX() {
-        return mTranslationX;
+    public Point getDraggingItemTranslation() {
+        return mTranslation;
     }
 
     private void updateTranslationOffset() {
         final int childCount = mRecyclerView.getChildCount();
         if (childCount > 0) {
-            mTranslationLeftLimit = mRecyclerView.getPaddingLeft();
-            mTranslationRightLimit = Math.max(0, (mRecyclerView.getWidth() - mRecyclerView.getPaddingRight() - mGrabbedItemWidth));
+            mTranslationStartLimit.x = mRecyclerView.getPaddingLeft();
+            mTranslationStartLimit.y = mRecyclerView.getPaddingTop();
+            mTranslationEndLimit.x = Math.max(0, (mRecyclerView.getWidth() - mRecyclerView.getPaddingRight() - mGrabbedItemSize.x));
+            mTranslationEndLimit.y = Math.max(0, (mRecyclerView.getHeight() - mRecyclerView.getPaddingBottom() - mGrabbedItemSize.y));
 
             if (!mIsScrolling) {
                 final int firstVisiblePosition = CustomRecyclerViewUtils.findFirstVisibleItemPosition(mRecyclerView);
                 final int lastVisiblePosition = CustomRecyclerViewUtils.findLastVisibleItemPosition(mRecyclerView);
-                final View leftChild = findRangeFirstItem(mRecyclerView, mRange, firstVisiblePosition, lastVisiblePosition);
-                final View rightChild = findRangeLastItem(mRecyclerView, mRange, firstVisiblePosition, lastVisiblePosition);
+                final View firstVisibleChild = findRangeFirstItem(mRecyclerView, mRange, firstVisiblePosition, lastVisiblePosition);
+                final View lastVisibleChild = findRangeLastItem(mRecyclerView, mRange, firstVisiblePosition, lastVisiblePosition);
 
-                if (leftChild != null) {
-                    mTranslationLeftLimit = Math.min(mTranslationRightLimit, leftChild.getLeft());
+                if (firstVisibleChild != null) {
+                    mTranslationStartLimit.x = Math.min(mTranslationEndLimit.x, firstVisibleChild.getLeft());
+                    mTranslationStartLimit.y = Math.min(mTranslationEndLimit.y, firstVisibleChild.getTop());
                 }
 
-                if (rightChild != null) {
-                    mTranslationRightLimit = Math.min(mTranslationRightLimit, rightChild.getRight());  ///TODO: Review
+                if (lastVisibleChild != null) {
+                    mTranslationEndLimit.x = Math.min(mTranslationEndLimit.x, lastVisibleChild.getRight());
+                    mTranslationEndLimit.y = Math.min(mTranslationEndLimit.y, lastVisibleChild.getBottom());
                 }
             }
         } else {
-            mTranslationRightLimit = mTranslationLeftLimit = mRecyclerView.getPaddingLeft();
+            mTranslationEndLimit.x = mTranslationStartLimit.x = mRecyclerView.getPaddingLeft();
+            mTranslationEndLimit.y = mTranslationStartLimit.y = mRecyclerView.getPaddingTop();
         }
 
-        mTranslationX = mTouchPositionX - mGrabbedPositionX;
-        mTranslationX = Math.min(Math.max(mTranslationX, mTranslationLeftLimit), mTranslationRightLimit);
+        mTranslation.x = mTouchPosition.x - mGrabbedPosition.x;
+        mTranslation.y = mTouchPosition.y - mGrabbedPosition.y;
+        mTranslation.x = Math.min(Math.max(mTranslation.x, mTranslationStartLimit.x), mTranslationEndLimit.x);
+        mTranslation.y = Math.min(Math.max(mTranslation.y, mTranslationStartLimit.y), mTranslationEndLimit.y);
     }
 
-    public boolean isReachedToLeftLimit() {
+    /*public boolean isReachedToLeftLimit() {
         return (mTranslationX == mTranslationLeftLimit);
     }
 
     public boolean isReachedToRightLimit() {
         return (mTranslationX == mTranslationRightLimit);
-    }
+    }*/
 
     private Bitmap createDraggingItemImage(View v) {
         int width = v.getWidth() + mShadowPadding.left + mShadowPadding.right;
@@ -200,7 +213,7 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
 
         final int savedCount = canvas.save(Canvas.CLIP_SAVE_FLAG | Canvas.MATRIX_SAVE_FLAG);
         canvas.translate(mShadowPadding.left, mShadowPadding.top);
-        canvas.scale(0.85f, 0.85f, width / 2, height / 2);
+        canvas.scale(0.84f, 0.84f, width / 2, height / 2);
         canvas.rotate(12.5f, width / 2, height / 2);
 
         v.draw(canvas);
@@ -209,10 +222,14 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         return bitmap;
     }
 
-    private void updateDraggingItemPosition(int translationX) {
+    private void updateDraggingItemPosition(Point translation) {
         // NOTE: Need to update the view position to make other decorations work properly while dragging
         if (mDraggingItem != null) {
-            setItemTranslationX(mRecyclerView, mDraggingItem, translationX - mDraggingItem.itemView.getLeft());
+            Log.d(TAG, "dragging item pos="+translation);
+            Point delta = translation; // TODO: Review
+            delta.x -= mDraggingItem.itemView.getLeft();
+            delta.y -= mDraggingItem.itemView.getTop();
+            setItemTranslation(mRecyclerView, mDraggingItem, translation);
         }
     }
 
@@ -225,13 +242,13 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
 
     }
 
-    public int getTranslatedItemPositionLeft() {
+    /*public int getTranslatedItemPositionLeft() {
         return mTranslationX;
     }
 
     public int getTranslatedItemPositionRight() {
         return mTranslationX + mGrabbedItemWidth;
-    }
+    }*/
 
 
     private static View findRangeFirstItem(RecyclerView rv, ItemDraggableRange range, int firstVisiblePosition, int lastVisiblePosition) {
