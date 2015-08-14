@@ -165,6 +165,7 @@ public class RecyclerViewDragDropManager {
     private ItemDraggableRange mDraggableRange;
     private InternalHandler mHandler;
     private OnItemDragEventListener mItemDragEventListener;
+    private int mTotalYScroll = 0;
 
     /**
      * Constructor.
@@ -485,6 +486,9 @@ public class RecyclerViewDragDropManager {
             Log.v(TAG, "onScrolled(dx = " + dx + ", dy = " + dy + ")");
         }
 
+        mTotalYScroll += dy;
+
+        Log.d(TAG, "set new actual scroll amount = "+mTotalYScroll);
         if (mInScrollByMethod) {
             mActualScrollByAmount = dy;
         }
@@ -570,10 +574,10 @@ public class RecyclerViewDragDropManager {
         mDraggingItemDecorator.setShadowDrawable(mShadowDrawable);
         mDraggingItemDecorator.start(e, mGrabbedPosition);
 
-        mSwapTargetItemOperator = new SwapTargetItemOperator(mRecyclerView, mDraggingItem, mDraggableRange);
+        /*mSwapTargetItemOperator = new SwapTargetItemOperator(mRecyclerView, mDraggingItem, mDraggableRange);
         mSwapTargetItemOperator.setSwapTargetTranslationInterpolator(mSwapTargetTranslationInterpolator);
         mSwapTargetItemOperator.start();
-        mSwapTargetItemOperator.update(mDraggingItemDecorator.getDraggingItemTranslation());
+        mSwapTargetItemOperator.update(mDraggingItemDecorator.getDraggingItemTranslation());*/
 
         if (mItemDragEventListener != null) {
             mItemDragEventListener.onDraggingStarted(mAdapter.getDraggingItemInitialPosition());
@@ -841,7 +845,7 @@ public class RecyclerViewDragDropManager {
         final Point translation = new Point((int)(mLastTouch.x - mGrabbedPosition.x),
                 (int) (mLastTouch.y - mGrabbedPosition.y));
         final ArrayList<RecyclerView.ViewHolder> swapTargetHolders =
-                findSwapTargetItems(rv, draggingItem, mDraggingItemId, translation, mDraggableRange);
+                findSwapTargetItems(rv, draggingItem, mDraggingItemId, translation, mDraggableRange, mLastTouch, mTotalYScroll);
 
         if ((swapTargetHolders != null) && swapTargetHolders.size() > 0 /* && (swapTargetHolders != mDraggingItem)*/) {
             swapItems(rv, draggingItem, swapTargetHolders);
@@ -851,6 +855,8 @@ public class RecyclerViewDragDropManager {
     /*package*/ void handleScrollOnDragging() {
         final RecyclerView rv = mRecyclerView;
         final int height = rv.getHeight();
+
+        Log.d(TAG, "try scrolling");
 
         if (height == 0) {
             return;
@@ -966,7 +972,7 @@ public class RecyclerViewDragDropManager {
                            ArrayList<RecyclerView.ViewHolder> swapTargetHolders) {
         final Rect swapTargetMargins = mDraggingItemMargins; //CustomRecyclerViewUtils.getLayoutMargins(swapTargetHolder.itemView, mTmpRect1); //TODO
         final int fromPosition = draggingItem.getAdapterPosition();
-        final int toPosition = swapTargetHolders.get(0).getAdapterPosition();
+        final int toPosition = swapTargetHolders.get(0).getAdapterPosition();  // TODO: check for NULL value
         final int diffPosition = Math.abs(fromPosition - toPosition);
         boolean performSwapping = false;
 
@@ -1103,14 +1109,16 @@ public class RecyclerViewDragDropManager {
     /*package*/
     static ArrayList<RecyclerView.ViewHolder> findSwapTargetItems(
             RecyclerView rv, RecyclerView.ViewHolder draggingItem,
-            long draggingItemId, Point translation, ItemDraggableRange range) {
+            long draggingItemId, Point translation, ItemDraggableRange range, Point lastTouch, int yscroll) {
         final int draggingItemPosition = draggingItem.getAdapterPosition();
         final int draggingViewLeft = draggingItem.itemView.getLeft();
         final int draggingViewTop = draggingItem.itemView.getTop();
-        final int itemSize = draggingItem.itemView.getWidth();
         ArrayList<RecyclerView.ViewHolder> swapTargetHolders = null;
 
         int target = -1;
+
+        final int itemSize = draggingItem.itemView.getWidth();
+        final int padding = 15; // TODO: GOTTTA FIX THIS MAN!!!!!
 
         // determine the swap target view
         if (draggingItemPosition != RecyclerView.NO_POSITION &&
@@ -1125,6 +1133,16 @@ public class RecyclerViewDragDropManager {
                 }
             }*/
 
+            final int y = yscroll+lastTouch.y;
+            final int x = lastTouch.x;
+            int row = y/(itemSize+padding);
+            int col = x/(itemSize+padding);
+
+            if (y < row*(itemSize+padding)+itemSize && x < col*(itemSize+padding)+itemSize) {
+                target = row * 4 + col;
+            }
+            Log.d(TAG, "child layout pos = "+target+" ys = "+yscroll+" last.y="+lastTouch.y+" H="+itemSize);
+/*
             final float tan_112_5 = -2.414f;
             final float tan_157_5 = -0.414f;
             final float tan_22_5 = 0.414f;
@@ -1207,7 +1225,9 @@ public class RecyclerViewDragDropManager {
                     }
                 }
             }
+
             Log.d(TAG, "tr.x = "+translation.x+", drVLeft = "+draggingViewLeft+", tr.y = "+translation.y+", drVTop = "+draggingViewTop);
+            */
         }
 
         // check range

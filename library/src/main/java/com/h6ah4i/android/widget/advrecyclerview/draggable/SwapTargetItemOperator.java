@@ -73,7 +73,7 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
 
         final ArrayList<RecyclerView.ViewHolder> swapTargetItems =
                 RecyclerViewDragDropManager.findSwapTargetItems(
-                        mRecyclerView, draggingItem, mDraggingItemId, mTranslation, mRange);
+                        mRecyclerView, draggingItem, mDraggingItemId, mTranslation, mRange, null, 0);
 
         // reset translation if the swap target has changed
         if ((mSwapTargetItems != null) && (swapTargetItems != null) && (mSwapTargetItems.get(0) != swapTargetItems.get(0))) {
@@ -209,6 +209,7 @@ class SwapTargetItemOperator extends BaseDraggableItemDecorator {
             // return to default position
             for (int i = 0; i < mSwapTargetItems.size(); i++) {
                 updateSwapTargetTranslation(mDraggingItem, mSwapTargetItems.get(i), mCurTranslationPhase); // TODO
+                Log.d(TAG, "moving i="+i+" to default position");
                 moveToDefaultPosition(mSwapTargetItems.get(i).itemView, animate);
             }
             mSwapTargetItems = null;
