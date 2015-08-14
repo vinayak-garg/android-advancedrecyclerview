@@ -64,7 +64,11 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         if (mDraggingItemImage != null) {
             final float left = mTranslation.x + mDraggingItemMargins.left + mRecyclerViewPadding.x - mShadowPadding.left;
             final float top = mTranslation.y + mDraggingItemMargins.top + mRecyclerViewPadding.y - mShadowPadding.top;
-            c.drawBitmap(mDraggingItemImage, left, top, null);
+
+            final float l = mTouchPosition.x - mDraggingItemImage.getWidth()/2;
+            final float t = mTouchPosition.y - mDraggingItemImage.getHeight()/2;
+            Log.d(TAG, "onDraw l="+l+" t="+t+" tr="+mTranslation);
+            c.drawBitmap(mDraggingItemImage, l, t, null);
         }
     }
 

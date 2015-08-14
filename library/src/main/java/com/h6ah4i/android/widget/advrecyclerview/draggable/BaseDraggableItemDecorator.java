@@ -70,6 +70,7 @@ abstract class BaseDraggableItemDecorator extends RecyclerView.ItemDecoration {
             animator.setDuration(animDuration);
             animator.setInterpolator(mReturnToDefaultPositionInterpolator);
             animator.translationX(0.0f);
+            animator.translationY(0.0f);
             animator.setListener(new ViewPropertyAnimatorListener() {
                 @Override
                 public void onAnimationStart(View view) {
