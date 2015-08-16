@@ -856,8 +856,6 @@ public class RecyclerViewDragDropManager {
         final RecyclerView rv = mRecyclerView;
         final int height = rv.getHeight();
 
-        Log.d(TAG, "try scrolling");
-
         if (height == 0) {
             return;
         }
@@ -1111,8 +1109,6 @@ public class RecyclerViewDragDropManager {
             RecyclerView rv, RecyclerView.ViewHolder draggingItem,
             long draggingItemId, Point translation, ItemDraggableRange range, Point lastTouch, int yscroll) {
         final int draggingItemPosition = draggingItem.getAdapterPosition();
-        final int draggingViewLeft = draggingItem.itemView.getLeft();
-        final int draggingViewTop = draggingItem.itemView.getTop();
         ArrayList<RecyclerView.ViewHolder> swapTargetHolders = null;
 
         int target = -1;
@@ -1142,92 +1138,6 @@ public class RecyclerViewDragDropManager {
                 target = row * 4 + col;
             }
             Log.d(TAG, "child layout pos = "+target+" ys = "+yscroll+" last.y="+lastTouch.y+" H="+itemSize);
-/*
-            final float tan_112_5 = -2.414f;
-            final float tan_157_5 = -0.414f;
-            final float tan_22_5 = 0.414f;
-            final float tan_67_5 = 2.414f;
-            final float tan_202_5 = 0.414f;
-            final float tan_247_5 = 2.414f;
-            final float tan_292_5 = -2.414f;
-            final float tan_337_5 = -0.414f;
-            float deltaX = (draggingViewLeft == translation.x ? 0.001f : translation.x - draggingViewLeft);
-            float deltaY = draggingViewTop - translation.y;
-
-            if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 0.1*itemSize) {
-                return null;
-            }
-
-            float slope = deltaY/deltaX;
-
-            if (translation.y < draggingViewTop) {
-                if (translation.x < draggingViewLeft) {
-                    // 1, 2, 4
-                    if (slope < tan_112_5) {
-                        //2
-                        Log.d(TAG, "dir = 2 dip="+draggingItemPosition);
-                        target = draggingItemPosition - 4;
-                    } else if (slope > tan_157_5) {
-                        //4
-                        Log.d(TAG, "dir = 4");
-                        target = draggingItemPosition - 1;
-                    } else {
-                        //1
-                        Log.d(TAG, "dir = 1");
-                        target = draggingItemPosition - 5;
-                    }
-                } else {
-                    // 2, 3, 5
-                    if (slope < tan_22_5) {
-                        //5
-                        Log.d(TAG, "dir = 5");
-                        target = draggingItemPosition + 1;
-                    } else if (slope > tan_67_5) {
-                        //2
-                        Log.d(TAG, "dir = 2");
-                        target = draggingItemPosition - 4;
-                    } else {
-                        //3
-                        Log.d(TAG, "dir = 3");
-                        target = draggingItemPosition - 3;
-                    }
-                }
-            } else {
-                if (translation.x < draggingViewLeft) {
-                    // 4, 6, 7
-                    if (slope < tan_202_5) {
-                        //4
-                        Log.d(TAG, "dir = 4");
-                        target = draggingItemPosition - 1;
-                    } else if (slope > tan_247_5) {
-                        //7
-                        Log.d(TAG, "dir = 7");
-                        target = draggingItemPosition + 4;
-                    } else {
-                        //6
-                        Log.d(TAG, "dir = 6");
-                        target = draggingItemPosition + 3;
-                    }
-                } else {
-                    // 5, 7, 8
-                    if (slope < tan_292_5) {
-                        //7
-                        Log.d(TAG, "dir = 7, tr.x = "+translation.x+", drVLeft = "+draggingViewLeft+", tr.y = "+translation.y+", drVTop = "+draggingViewTop);
-                        target = draggingItemPosition + 4;
-                    } else if (slope > tan_337_5) {
-                        //5
-                        Log.d(TAG, "dir = 5 "+slope);
-                        target = draggingItemPosition + 1;
-                    } else {
-                        //8
-                        Log.d(TAG, "dir = 8");
-                        target = draggingItemPosition + 5;
-                    }
-                }
-            }
-
-            Log.d(TAG, "tr.x = "+translation.x+", drVLeft = "+draggingViewLeft+", tr.y = "+translation.y+", drVTop = "+draggingViewTop);
-            */
         }
 
         // check range
