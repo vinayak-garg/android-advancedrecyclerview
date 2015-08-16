@@ -67,7 +67,7 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
 
             final float l = mTouchPosition.x - mDraggingItemImage.getWidth()/2;
             final float t = mTouchPosition.y - mDraggingItemImage.getHeight()/2;
-            Log.d(TAG, "onDraw l="+l+" t="+t+" tr="+mTranslation);
+            Log.d(TAG, "onDraw l="+l+" t="+t+" mT.y="+mTranslation.y);
             c.drawBitmap(mDraggingItemImage, l, t, null);
         }
     }
@@ -199,13 +199,13 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         mTranslation.y = Math.min(Math.max(mTranslation.y, mTranslationStartLimit.y), mTranslationEndLimit.y);
     }
 
-    /*public boolean isReachedToLeftLimit() {
-        return (mTranslationX == mTranslationLeftLimit);
+    public boolean isReachedToTopLimit() {
+        return (mTranslation.y == mTranslationStartLimit.y);
     }
 
-    public boolean isReachedToRightLimit() {
-        return (mTranslationX == mTranslationRightLimit);
-    }*/
+    public boolean isReachedToBottomLimit() {
+        return (mTranslation.y == mTranslationEndLimit.y);
+    }
 
     private Bitmap createDraggingItemImage(View v) {
         int width = v.getWidth() + mShadowPadding.left + mShadowPadding.right;
@@ -229,11 +229,11 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
     private void updateDraggingItemPosition(Point translation) {
         // NOTE: Need to update the view position to make other decorations work properly while dragging
         if (mDraggingItem != null) {
-            Log.d(TAG, "dragging item pos="+translation);
-            Point delta = translation; // TODO: Review
-            delta.x -= mDraggingItem.itemView.getLeft();
-            delta.y -= mDraggingItem.itemView.getTop();
-            setItemTranslation(mRecyclerView, mDraggingItem, translation);
+            Point delta = new Point();
+            delta.x = mGrabbedPosition.x - mDraggingItemImage.getWidth()/2;
+            delta.y = mGrabbedPosition.y - mDraggingItemImage.getHeight()/2;
+            //Log.d(TAG, "dragging item pos="+translation+" delta="+delta);
+            setItemTranslation(mRecyclerView, mDraggingItem, delta);
         }
     }
 
@@ -246,13 +246,13 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
 
     }
 
-    /*public int getTranslatedItemPositionLeft() {
-        return mTranslationX;
+    public int getTranslatedItemPositionTop() {
+        return mTranslation.y;
     }
 
-    public int getTranslatedItemPositionRight() {
-        return mTranslationX + mGrabbedItemWidth;
-    }*/
+    public int getTranslatedItemPositionBottom() {
+        return mTranslation.y + mGrabbedItemSize.y;
+    }
 
 
     private static View findRangeFirstItem(RecyclerView rv, ItemDraggableRange range, int firstVisiblePosition, int lastVisiblePosition) {
