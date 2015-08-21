@@ -1131,7 +1131,30 @@ public class RecyclerViewDragDropManager {
             if (y < row*(itemSize+padding)+itemSize && x < col*(itemSize+padding)+itemSize) {
                 target = row * 4 + col;
             }
-            Log.d(TAG, "child layout pos = "+target+" ys = "+yscroll+" last.y="+lastTouch.y+" H="+itemSize);
+            Log.d(TAG, "child layout target = "+target+" ys = "+yscroll+" last.y="+lastTouch.y+" H="+itemSize);
+
+            int count = rv.getAdapter().getItemCount();
+
+            /*
+             * Set last clip as target if user moves to last row beyond last clip
+             */
+            if (target >= count && target < ((count-1)/4 + 1)*4) {
+                target = count - 1;
+            }
+
+            if (target >= 0 && target < count) {
+                swapTargetHolders = new ArrayList<>();
+                int delta = (target > draggingItemPosition ? -1 : 1);
+                Log.d(TAG, "target = "+target+", pos = "+draggingItemPosition+", delta = "+delta);
+                for (int i = target; i != draggingItemPosition; i += delta) {
+                    RecyclerView.ViewHolder vh = rv.findViewHolderForAdapterPosition(i);
+                    if (vh == null) {
+                        Log.wtf(TAG, "What a terrible failure! We couldn't find the view holder for required adapter position.");
+                        return null;
+                    }
+                    swapTargetHolders.add(vh);
+                }
+            }
         }
 
         // check range
@@ -1141,19 +1164,7 @@ public class RecyclerViewDragDropManager {
             }
         }*/
 
-        if (target >= 0 && target < rv.getAdapter().getItemCount()) {
-            swapTargetHolders = new ArrayList<>();
-            int delta = (target > draggingItemPosition ? -1 : 1);
-            Log.d(TAG, "target = "+target+", dIP = "+draggingItemPosition+", delta = "+delta);
-            for (int i = target; i != draggingItemPosition; i += delta) {
-                RecyclerView.ViewHolder vh = rv.findViewHolderForAdapterPosition(i);
-                if (vh == null) {
-                    Log.wtf(TAG, "what the ??");
-                    return null;
-                }
-                swapTargetHolders.add(vh);
-            }
-        }
+
 
         return swapTargetHolders;
     }
