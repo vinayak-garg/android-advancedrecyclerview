@@ -62,4 +62,4 @@ tasks.withType(JavaCompile) {
 }
 
 // NOTE: this line should be place at end of the file
-apply from: '../common/android-maven-publish.gradle'
+//apply from: '../common/android-maven-publish.gradle'
