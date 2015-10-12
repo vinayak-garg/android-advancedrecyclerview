@@ -134,7 +134,7 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         final View itemView = mDraggingItemViewHolder.itemView;
 
         mDraggingItemInfo = draggingItemInfo;
-        mDraggingItemImage = createDraggingItemImage(itemView, mShadowDrawable);
+        mDraggingItemImage = createDraggingItemImage(itemView);
 
         mTranslationLeftLimit = mRecyclerView.getPaddingLeft();
         mTranslationTopLimit = mRecyclerView.getPaddingTop();
@@ -300,7 +300,7 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
         return (mTranslationX == mTranslationRightLimit);
     }
 
-    private Bitmap createDraggingItemImage(View v, NinePatchDrawable shadow) {
+    private Bitmap createDraggingItemImage(View v) {
         int width = v.getWidth() + mShadowPadding.left + mShadowPadding.right;
         int height = v.getHeight() + mShadowPadding.top + mShadowPadding.bottom;
 
@@ -308,15 +308,12 @@ class DraggingItemDecorator extends BaseDraggableItemDecorator {
 
         final Canvas canvas = new Canvas(bitmap);
 
-        if (shadow != null) {
-            shadow.setBounds(0, 0, width, height);
-            shadow.draw(canvas);
-        }
-
         final int savedCount = canvas.save(Canvas.CLIP_SAVE_FLAG | Canvas.MATRIX_SAVE_FLAG);
         // NOTE: Explicitly set clipping rect. This is required on Gingerbread.
         canvas.clipRect(mShadowPadding.left, mShadowPadding.top, width - mShadowPadding.right, height - mShadowPadding.bottom);
         canvas.translate(mShadowPadding.left, mShadowPadding.top);
+        canvas.scale(0.84f, 0.84f, width / 2, height / 2);
+        canvas.rotate(12.5f, width / 2, height / 2);
         v.draw(canvas);
         canvas.restoreToCount(savedCount);
 
