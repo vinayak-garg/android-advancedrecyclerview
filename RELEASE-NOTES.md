@@ -1,3 +1,12 @@
+## 0.8.2
+- Updated support library to v23.1.0
+- Added notify*Changed methods which has payload parameter
+
+
+## 0.8.1
+- Fixed issue #124 (Long press should cancel when recycler view scrolls)
+
+
 ## 0.8.0
 [Main new features and improvements]
 - Support GridLayoutManager (drag & drop, swipe)   (issue #41, #67, #86)
