@@ -1,3 +1,47 @@
+## 0.8.7
+[New features]
+- Added onItemDragMoveDistanceUpdated() callback to OnItemDragEventListener (#191)
+- Added "minimal" draggable/swipeable/expandable examples
+- Updated support library to v23.2.1
+
+[Bug fixes]
+- Fixed drag & drop behavior of GridLayoutManager (related to #193)
+
+
+## 0.8.6
+[New features]
+- Added these methods to RecyclerViewExpandableItemManager (issue #161)
+  - getExpandedGroupsCount()
+  - getCollapsedGroupsCount()
+  - isAllGroupsExpanded()
+  - isAllGroupsCollapsed()
+
+[Bug fixes]
+- Fixed issue #158, #173, #176 (NullPointerException bug)
+- Fixed issue #173 (crash bugs bug)
+- Fixed issue #163 (Dragging with only 2 items in list lags significantly more than if it had more than 2 items.. bug)
+- Fixed issue #153 (Bug:happens as the user dragging,and the item root view's margin is set bug)
+- Fixed issue #152 (bug:Samsung S3 4.1.1(genymotion) with swipe left bug)
+
+
+## 0.8.5
+- Updated support library to v23.1.1
+- Fixed issue #145 (SwipeableItemWrapperAdapter.onViewRecycled crash bug)
+- Re-implement the ExpandableItemIndicator without vector-compat (related issue: #149)
+- Reduced overdraws on API level v20 or lower (related PR: #146)
+- Small bug fixes
+
+
+## 0.8.4
+- Fixed issue #142 (Recycler View crash on destroy)
+
+
+## 0.8.3
+- Fixed issue #131 (Bottom padding of recycler view offsets the dragging item [Drag drop] bug)
+- Fixed issue #133 (Wrong item position used when data set changes during swipe bug)
+- Fixed issue #136 (Item swipe completes after holder recycled bug)
+
+
 ## 0.8.2
 - Updated support library to v23.1.0
 - Added notify*Changed methods which has payload parameter

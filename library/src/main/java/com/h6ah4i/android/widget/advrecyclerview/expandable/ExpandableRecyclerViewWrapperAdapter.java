@@ -26,9 +26,10 @@ import com.h6ah4i.android.widget.advrecyclerview.draggable.ItemDraggableRange;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.RecyclerViewSwipeManager;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.SwipeableItemAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAction;
-import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultActionDefault;
 import com.h6ah4i.android.widget.advrecyclerview.utils.BaseWrapperAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
+
+import java.util.List;
 
 class ExpandableRecyclerViewWrapperAdapter
         extends BaseWrapperAdapter<RecyclerView.ViewHolder>
@@ -165,7 +166,7 @@ class ExpandableRecyclerViewWrapperAdapter
 
     @SuppressWarnings("unchecked")
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position, List<Object> payloads) {
         if (mExpandableItemAdapter == null) {
             return;
         }
@@ -605,14 +606,14 @@ class ExpandableRecyclerViewWrapperAdapter
     }
 
     /*package*/ void expandAll() {
-        if (!mPositionTranslator.isAllExpanded()) {
+        if (!mPositionTranslator.isEmpty() && !mPositionTranslator.isAllExpanded()) {
             mPositionTranslator.build(mExpandableItemAdapter, true);
             notifyDataSetChanged();
         }
     }
 
     /*package*/ void collapseAll() {
-        if (!mPositionTranslator.isAllCollapsed()) {
+        if (!mPositionTranslator.isEmpty() && !mPositionTranslator.isAllCollapsed()) {
             mPositionTranslator.build(mExpandableItemAdapter, false);
             notifyDataSetChanged();
         }
@@ -878,6 +879,22 @@ class ExpandableRecyclerViewWrapperAdapter
 
     /*package*/ int getChildCount(int groupPosition) {
         return mExpandableItemAdapter.getChildCount(groupPosition);
+    }
+
+    /*package*/ int getExpandedGroupsCount() {
+        return mPositionTranslator.getExpandedGroupsCount();
+    }
+
+    /*package*/ int getCollapsedGroupsCount() {
+        return mPositionTranslator.getCollapsedGroupsCount();
+    }
+
+    /*package*/ boolean isAllGroupsExpanded() {
+        return mPositionTranslator.isAllExpanded();
+    }
+
+    /*package*/ boolean isAllGroupsCollapsed() {
+        return mPositionTranslator.isAllCollapsed();
     }
 
     private static ExpandableItemAdapter getExpandableItemAdapter(RecyclerView.Adapter adapter) {

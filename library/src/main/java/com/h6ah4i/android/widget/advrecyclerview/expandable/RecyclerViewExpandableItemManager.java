@@ -31,7 +31,7 @@ import android.view.ViewConfiguration;
 import com.h6ah4i.android.widget.advrecyclerview.utils.CustomRecyclerViewUtils;
 
 /**
- * Provides item swipe operation for {@link android.support.v7.widget.RecyclerView}
+ * Provides item expansion operation for {@link android.support.v7.widget.RecyclerView}
  */
 public class RecyclerViewExpandableItemManager implements ExpandableItemConstants {
     private static final String TAG = "ARVExpandableItemMgr";
@@ -167,6 +167,10 @@ public class RecyclerViewExpandableItemManager implements ExpandableItemConstant
      */
     @SuppressWarnings("unchecked")
     public RecyclerView.Adapter createWrappedAdapter(@NonNull RecyclerView.Adapter adapter) {
+        if (!adapter.hasStableIds()) {
+            throw new IllegalArgumentException("The passed adapter does not support stable IDs");
+        }
+
         if (mAdapter != null) {
             throw new IllegalStateException("already have a wrapped adapter");
         }
@@ -928,6 +932,42 @@ public class RecyclerViewExpandableItemManager implements ExpandableItemConstant
             scrollAmount = Math.min(topRoom - topMargin, scrollAmount);
             mRecyclerView.smoothScrollBy(0, scrollAmount);
         }
+    }
+
+    /**
+     * Gets the number of expanded groups.
+     *
+     * @return the number of expanded groups
+     */
+    public int getExpandedGroupsCount() {
+        return mAdapter.getExpandedGroupsCount();
+    }
+
+    /**
+     * Gets the number of collapsed groups.
+     *
+     * @return the number of collapsed groups
+     */
+    public int getCollapsedGroupsCount() {
+        return mAdapter.getCollapsedGroupsCount();
+    }
+
+    /**
+     * Whether the all groups are expanded.
+     *
+     * @return True if there is at least 1 group exists and every groups are expanded, otherwise false.
+     */
+    public boolean isAllGroupsExpanded() {
+        return mAdapter.isAllGroupsExpanded();
+    }
+
+    /**
+     * Whether the all groups are expanded.
+     *
+     * @return True if no group exists or every groups are collapsed, otherwise false.
+     */
+    public boolean isAllGroupsCollapsed() {
+        return mAdapter.isAllGroupsCollapsed();
     }
 
     public static class SavedState implements Parcelable {

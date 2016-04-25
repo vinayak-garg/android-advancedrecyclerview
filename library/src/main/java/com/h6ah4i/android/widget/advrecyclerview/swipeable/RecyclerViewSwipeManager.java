@@ -136,6 +136,10 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
      */
     @SuppressWarnings("unchecked")
     public RecyclerView.Adapter createWrappedAdapter(@NonNull RecyclerView.Adapter adapter) {
+        if (!adapter.hasStableIds()) {
+            throw new IllegalArgumentException("The passed adapter does not support stable IDs");
+        }
+
         if (mAdapter != null) {
             throw new IllegalStateException("already have a wrapped adapter");
         }
@@ -206,6 +210,8 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
      * <p>This method should be called in order to avoid memory leaks.</p>
      */
     public void release() {
+        cancelSwipe(true);
+
         if (mHandler != null) {
             mHandler.release();
             mHandler = null;
@@ -236,7 +242,7 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
      * @return True if currently performing item swiping
      */
     public boolean isSwiping() {
-        return (mSwipingItem != null);
+        return (mSwipingItem != null) && (!mHandler.isCancelSwipeRequested());
     }
 
     /**
@@ -258,7 +264,7 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
         switch (action) {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                if (handleActionUpOrCancel(e)) {
+                if (handleActionUpOrCancel(e, true)) {
                     return true;
                 }
                 break;
@@ -300,7 +306,7 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
         switch (action) {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
-                handleActionUpOrCancel(e);
+                handleActionUpOrCancel(e, true);
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -311,7 +317,7 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
 
     /*package*/ void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
         if (disallowIntercept) {
-            cancelSwipe();
+            cancelSwipe(true);
         }
     }
 
@@ -364,7 +370,7 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
         return WrapperAdapterUtils.findWrappedAdapter(rv.getAdapter(), SwipeableItemWrapperAdapter.class);
     }
 
-    private boolean handleActionUpOrCancel(MotionEvent e) {
+    private boolean handleActionUpOrCancel(MotionEvent e, boolean invokeFinish) {
         int action = MotionEvent.ACTION_CANCEL;
 
         if (e != null) {
@@ -374,7 +380,9 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
         }
 
         if (isSwiping()) {
-            handleActionUpOrCancelWhileSwiping(action);
+            if (invokeFinish) {
+                handleActionUpOrCancelWhileSwiping(action);
+            }
             return true;
         } else {
             handleActionUpOrCancelWhileNotSwiping();
@@ -383,7 +391,9 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
     }
 
     private void handleActionUpOrCancelWhileNotSwiping() {
-        mHandler.cancelLongPressDetection();
+        if (mHandler != null) {
+            mHandler.cancelLongPressDetection();
+        }
 
         mCheckingTouchSlop = RecyclerView.NO_ID;
         mSwipingItemReactionType = 0;
@@ -544,7 +554,7 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
         }
 
         // raise onSwipeItemStarted() event
-        mAdapter.onSwipeItemStarted(this, holder, itemPosition);
+        mAdapter.onSwipeItemStarted(this, holder, mSwipingItemId);
     }
 
     private void finishSwiping(int result) {
@@ -553,6 +563,9 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
         if (swipingItem == null) {
             return;
         }
+
+        // cancel deferred request
+        mHandler.removeDeferredCancelSwipeRequest();
 
         mHandler.cancelLongPressDetection();
 
@@ -697,8 +710,19 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
     }
 
     public void cancelSwipe() {
-        handleActionUpOrCancel(null);
-        finishSwiping(RESULT_CANCELED);
+        cancelSwipe(false);
+    }
+
+    /*package*/ void cancelSwipe(boolean immediately) {
+        handleActionUpOrCancel(null, false);
+
+        if (immediately) {
+            finishSwiping(RESULT_CANCELED);
+        } else {
+            if (isSwiping()) {
+                mHandler.requestDeferredCancelSwipe();
+            }
+        }
     }
 
     /*package*/ boolean isAnimationRunning(RecyclerView.ViewHolder item) {
@@ -856,6 +880,7 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
 
     private static class InternalHandler extends Handler {
         private static final int MSG_LONGPRESS = 1;
+        private static final int MSG_DEFERRED_CANCEL_SWIPE = 2;
 
         private RecyclerViewSwipeManager mHolder;
         private MotionEvent mDownMotionEvent;
@@ -875,6 +900,9 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
                 case MSG_LONGPRESS:
                     mHolder.handleOnLongPress(mDownMotionEvent);
                     break;
+                case MSG_DEFERRED_CANCEL_SWIPE:
+                    mHolder.cancelSwipe(true);
+                    break;
             }
         }
 
@@ -890,6 +918,21 @@ public class RecyclerViewSwipeManager implements SwipeableItemConstants {
                 mDownMotionEvent.recycle();
                 mDownMotionEvent = null;
             }
+        }
+
+        public void removeDeferredCancelSwipeRequest() {
+            removeMessages(MSG_DEFERRED_CANCEL_SWIPE);
+        }
+
+        public void requestDeferredCancelSwipe() {
+            if (isCancelSwipeRequested()) {
+                return;
+            }
+            sendEmptyMessage(MSG_DEFERRED_CANCEL_SWIPE);
+        }
+
+        public boolean isCancelSwipeRequested() {
+            return hasMessages(MSG_DEFERRED_CANCEL_SWIPE);
         }
     }
 }

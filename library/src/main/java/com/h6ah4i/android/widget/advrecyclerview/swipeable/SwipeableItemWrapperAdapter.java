@@ -26,6 +26,8 @@ import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAct
 import com.h6ah4i.android.widget.advrecyclerview.utils.BaseWrapperAdapter;
 import com.h6ah4i.android.widget.advrecyclerview.utils.WrapperAdapterUtils;
 
+import java.util.List;
+
 class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends BaseWrapperAdapter<VH> {
     private static final String TAG = "ARVSwipeableWrapper";
 
@@ -39,7 +41,7 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
 
     private BaseSwipeableItemAdapter mSwipeableItemAdapter;
     private RecyclerViewSwipeManager mSwipeManager;
-    private int mSwipingItemPosition = RecyclerView.NO_POSITION;
+    private long mSwipingItemId = RecyclerView.NO_ID;
 
     public SwipeableItemWrapperAdapter(RecyclerViewSwipeManager manager, RecyclerView.Adapter<VH> adapter) {
         super(adapter);
@@ -62,20 +64,29 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
 
         mSwipeableItemAdapter = null;
         mSwipeManager = null;
-        mSwipingItemPosition = RecyclerView.NO_POSITION;
+        mSwipingItemId = RecyclerView.NO_ID;
     }
 
     @Override
     public void onViewRecycled(VH holder) {
         super.onViewRecycled(holder);
 
+        if ((mSwipingItemId != RecyclerView.NO_ID) && (mSwipingItemId == holder.getItemId())) {
+            mSwipeManager.cancelSwipe();
+        }
+
         // reset SwipeableItemViewHolder state
         if (holder instanceof SwipeableItemViewHolder) {
-            mSwipeManager.cancelPendingAnimations(holder);
+            if (mSwipeManager != null) {
+                mSwipeManager.cancelPendingAnimations(holder);
+            }
 
-            setSwipeItemSlideAmount(((SwipeableItemViewHolder) holder), 0.0f, swipeHorizontal());
+            SwipeableItemViewHolder swipeableHolder = (SwipeableItemViewHolder) holder;
 
-            View containerView = ((SwipeableItemViewHolder) holder).getSwipeableContainerView();
+            swipeableHolder.setSwipeItemHorizontalSlideAmount(0);
+            swipeableHolder.setSwipeItemVerticalSlideAmount(0);
+
+            View containerView = swipeableHolder.getSwipeableContainerView();
 
             if (containerView != null) {
                 ViewCompat.animate(containerView).cancel();
@@ -97,7 +108,7 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
     }
 
     @Override
-    public void onBindViewHolder(VH holder, int position) {
+    public void onBindViewHolder(VH holder, int position, List<Object> payloads) {
         float prevSwipeItemSlideAmount = 0;
 
         if (holder instanceof SwipeableItemViewHolder) {
@@ -107,15 +118,15 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
         if (isSwiping()) {
             int flags = Constants.STATE_FLAG_SWIPING;
 
-            if (position == mSwipingItemPosition) {
+            if (holder.getItemId() == mSwipingItemId) {
                 flags |= Constants.STATE_FLAG_IS_ACTIVE;
             }
 
             safeUpdateFlags(holder, flags);
-            super.onBindViewHolder(holder, position);
+            super.onBindViewHolder(holder, position, payloads);
         } else {
             safeUpdateFlags(holder, 0);
-            super.onBindViewHolder(holder, position);
+            super.onBindViewHolder(holder, position, payloads);
         }
 
         if (holder instanceof SwipeableItemViewHolder) {
@@ -183,7 +194,7 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
         }
     }
 
-    // NOTE: This method is called from RecyclerViewDragDropManager
+    // NOTE: This method is called from RecyclerViewSwipeManager
     /*package*/
     @SuppressWarnings("unchecked")
     int getSwipeReactionType(RecyclerView.ViewHolder holder, int position, int x, int y) {
@@ -194,7 +205,7 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
         return mSwipeableItemAdapter.onGetSwipeReactionType(holder, position, x, y);
     }
 
-    // NOTE: This method is called from RecyclerViewDragDropManager
+    // NOTE: This method is called from RecyclerViewSwipeManager
     /*package*/
     @SuppressWarnings("unchecked")
     void onUpdateSlideAmount(RecyclerView.ViewHolder holder, int position, boolean horizontal, float amount, boolean isSwiping, int type) {
@@ -228,18 +239,18 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
                 (horizontal ? amount : 0.0f), (horizontal ? 0.0f : amount), isSwiping);
     }
 
-    // NOTE: This method is called from RecyclerViewDragDropManager
-    /*package*/ void onSwipeItemStarted(RecyclerViewSwipeManager manager, RecyclerView.ViewHolder holder, int position) {
+    // NOTE: This method is called from RecyclerViewSwipeManager
+    /*package*/ void onSwipeItemStarted(RecyclerViewSwipeManager manager, RecyclerView.ViewHolder holder, long id) {
         if (LOCAL_LOGD) {
-            Log.d(TAG, "onSwipeItemStarted(holder = " + holder + ", position = " + position + ")");
+            Log.d(TAG, "onSwipeItemStarted(holder = " + holder + ", id = " + id + ")");
         }
 
-        mSwipingItemPosition = position;
+        mSwipingItemId = id;
 
         notifyDataSetChanged();
     }
 
-    // NOTE: This method is called from RecyclerViewDragDropManager
+    // NOTE: This method is called from RecyclerViewSwipeManager
     /*package*/
     @SuppressWarnings("unchecked")
     SwipeResultAction onSwipeItemFinished(RecyclerView.ViewHolder holder, int position, int result) {
@@ -247,7 +258,7 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
             Log.d(TAG, "onSwipeItemFinished(holder = " + holder + ", position = " + position + ", result = " + result + ")");
         }
 
-        mSwipingItemPosition = RecyclerView.NO_POSITION;
+        mSwipingItemId = RecyclerView.NO_ID;
 
         return SwipeableItemInternalUtils.invokeOnSwipeItem(mSwipeableItemAdapter, holder, position, result);
     }
@@ -270,7 +281,7 @@ class SwipeableItemWrapperAdapter<VH extends RecyclerView.ViewHolder> extends Ba
     }
 
     protected boolean isSwiping() {
-        return (mSwipingItemPosition != RecyclerView.NO_POSITION);
+        return (mSwipingItemId != RecyclerView.NO_ID);
     }
 
     private boolean swipeHorizontal() {
